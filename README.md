@@ -11,8 +11,6 @@ In our work, we explain why the overfits occur and propose a method for tuning t
 
 We show that our method is available to search for the optimal number of hidden nodes, without jeopardizing classification performance. We mainly focus on the classification of electroencephalography signals, but the method can prove powerful for dealing with unrepresentative features.
 
-<img src="images/Fig5.pdf" width="800">
-
 ## MatLab implementation
 We offer an implementation of the traditional ELM and the proposed RBP method in MatLab, along with an example of the aplication of RBP in synthetic data.
 
