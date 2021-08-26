@@ -7,8 +7,16 @@ Created on Tue Nov 10 19:12:16 2020
 
 class RBP:
     
+    
     import numpy as np
     import scipy.linalg as sc_lin
+    
+    
+    def __init__(self):
+        from scipy.stats import kurtosis
+        
+        self.kurtosis = kurtosis
+        return
     
     def generate_rand_network(self, x, N_nodes, distr="uniform"):
         
@@ -45,7 +53,7 @@ class RBP:
     
     
     
-    def generate_H(self,x,W,b,act_fun="sigmoid"):
+    def generate_H(self, x, W, b, act_fun="sigmoid"):
         """
         Parameters
         ----------
@@ -61,17 +69,21 @@ class RBP:
         Returns
         -------
         H : array []
-            DESCRIPTION.
+            Hidden activation function.
     
         """
         
         H = self.np.dot(x, W)
-        H=H+b
+        
+        H = H + b
             
-        if act_fun== "sigmoid":
-            H=self.sigmoid(H)
-        if act_fun== "ReLU":
-            H=self.ReLU(H)
+        if act_fun == "sigmoid":
+            
+            H = self.sigmoid(H)
+            
+        if act_fun == "ReLU":
+            
+            H = self.ReLU(H)
               
         return H
     
@@ -85,23 +97,35 @@ class RBP:
         z = (1 - self.np.exp(-H))/(1 + self.np.exp(-H));
         return z
     
-    def fit(self, x, W, b, y):
+    def fit(self, x, W, b, y, Reg=0):
         
-        H = self.generate_H(x,W,b)
+        H = self.generate_H(x, W, b)
             
-        # Train
-        Ht = self.sc_lin.pinv2(H)
-        B  = self.np.dot(Ht, y)
-        
+        if Reg == 0:
+            # Train traditional ELM
+            Ht = self.sc_lin.pinv2(H)
+            B  = self.np.dot(Ht, y)
+        else:
+            # Train Regularized ELM
+            I = self.np.identity(H.shape[1]);
+            H_t = H.T
+            p1 = self.np.linalg.inv((self.np.matmul(H_t , H) + Reg * I ))
+            p2 = self.np.dot(H_t, y)
+            B = self.np.dot(p1, p2)
+     
         return B
+    
     
     def predict(self, x, W, b, B):
         # Generate H
-        H=self.generate_H(x,W,b)
+        H = self.generate_H(x,W,b)
+        
         # Make a prediction
         y = self.np.dot(H,B)
+        
         # Use the sign as class predictor
         y = self.np.sign(y)
+        
         return y
     
     def fix_prunning(self, W, b, B, prn_perc, mode="keep"):
@@ -157,10 +181,10 @@ class RBP:
         idx = self.np.argsort(B_abs,axis=0)
         
         if mode == "keep":
-            idx_prun  = idx[B.shape[0]-n::]
+            idx_prun  = idx[0:n]
             
         if mode == "prune":
-            idx_prun  = idx[n::]
+            idx_prun  = idx[0:-n]
             
         # Prune the network
         B_pruned = B[idx_prun]
@@ -168,3 +192,5 @@ class RBP:
         b_pruned = b[0,idx_prun]
         
         return W_pruned,b_pruned,B_pruned
+    
+
