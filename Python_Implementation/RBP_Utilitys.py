@@ -13,9 +13,6 @@ class RBP:
     
     
     def __init__(self):
-        from scipy.stats import kurtosis
-        
-        self.kurtosis = kurtosis
         return
     
     def generate_rand_network(self, x, N_nodes, distr="uniform"):
@@ -177,7 +174,6 @@ class RBP:
           
         # Calculate the nodes ranking
         B_abs = self.np.abs(B)        
-        B_abs = B_abs[:,0]
         idx = self.np.argsort(B_abs,axis=0)
         
         if mode == "keep":
