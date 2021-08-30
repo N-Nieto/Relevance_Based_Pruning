@@ -1,21 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov 10 19:12:16 2020
+@author: Nieto Nicolás -  nnieto@sinc.unl.edu.ar
 
-@author: Nicolás
+@code : Updated codes in https://github.com/N-Nieto/Relevance_Based_Pruning/
+
+Please cite: Nieto, N., Ibarrola, F., Peterson, V., Rufiner, H., & Spies, R. (2019). 
+Extreme Learning Machine design for dealing with unrepresentative features. 
+arXiv preprint https://arxiv.org/abs/1912.02154.
+
+@article{nieto2019extreme,
+  title={Extreme Learning Machine design for dealing with unrepresentative features},
+  author={Nieto, Nicol{\'a}s and Ibarrola, Francisco and Peterson, Victoria and Rufiner, Hugo and Spies, Ruben},
+  journal={arXiv preprint arXiv:1912.02154},
+  year={2019}
+}
+
+
 """
-
 class RBP:
     
     
     import numpy as np
     import scipy.linalg as sc_lin
-    
+    import torch 
     
     def __init__(self):
+        from scipy.stats import kurtosis
+        
+        self.kurtosis = kurtosis
+        
         return
     
-    def generate_rand_network(self, x, N_nodes, distr="uniform"):
+    def generate_rand_network(self, x, N_nodes, distr="uniform" , random_state = None):
         
         """
         Parameters
@@ -36,15 +52,19 @@ class RBP:
     
         """
         
+
         # Data dimension
         dim = x.shape[1]
         
         if distr=="uniform":
-            W= (self.np.random.rand(dim, N_nodes) *2) -1
-            b= (self.np.random.rand(1, N_nodes) *2) -1
-        if distr=="normal":   
-            W=self.np.random.normal(size=[dim,N_nodes])
-            b=self.np.random.normal(size=[N_nodes])
+            
+            W = (self.np.random.rand(dim, N_nodes) *2) -1
+            b = (self.np.random.rand(1, N_nodes) *2) -1
+            
+        if distr == "normal":   
+            
+            W = self.np.random.normal(size=[dim,N_nodes])
+            b = self.np.random.normal(size=[N_nodes])
     
         return W , b 
     
@@ -94,21 +114,56 @@ class RBP:
         z = (1 - self.np.exp(-H))/(1 + self.np.exp(-H));
         return z
     
-    def fit(self, x, W, b, y, Reg=0):
+    def fit(self, x, W, b, y, Reg = 0, device = "cpu"):
         
         H = self.generate_H(x, W, b)
+          
+        if device == "cpu" or device =="CPU":
+            if Reg == 0:
+                # Train traditional ELM
+                Ht = self.sc_lin.pinv2(H)
+                B  = self.np.dot(Ht, y)
+            else:
+                # Train Regularized ELM
+                I = self.np.identity(H.shape[1]);
+                
+                H_t = H.T
+                
+                p1 = self.np.linalg.inv((self.np.matmul(H_t , H) + Reg * I ))
+                
+                p2 = self.np.dot(H_t, y)
+                
+                B = self.np.dot(p1, p2)
+
+        # GPU implementation of pseudoinverse 
+        if device == "cuda" or device == "CUDA":
             
-        if Reg == 0:
-            # Train traditional ELM
-            Ht = self.sc_lin.pinv2(H)
-            B  = self.np.dot(Ht, y)
-        else:
-            # Train Regularized ELM
-            I = self.np.identity(H.shape[1]);
-            H_t = H.T
-            p1 = self.np.linalg.inv((self.np.matmul(H_t , H) + Reg * I ))
-            p2 = self.np.dot(H_t, y)
-            B = self.np.dot(p1, p2)
+            if Reg == 0:
+                # Train traditional ELM
+                H_T = self.torch.from_numpy(H).to("cuda")
+                
+                Ht = self.torch.linalg.pinv(H_T)
+                
+                Ht = Ht.to("cpu").numpy()
+                
+                B  = self.np.dot(Ht, y)  
+            else:
+                # Train Regularized ELM
+                I = self.np.identity(H.shape[1]);
+                
+                H_t = H.T
+                
+                arg = self.np.matmul(H_t , H) + Reg * I
+                
+                arg = self.torch.from_numpy(arg).to("cuda")
+                
+                p1 = self.torch.linalg.inv(arg)
+                
+                p1 = p1.to("cpu").numpy()
+                
+                p2 = self.np.dot(H_t, y)
+                
+                B = self.np.dot(p1, p2)
      
         return B
     
@@ -125,7 +180,7 @@ class RBP:
         
         return y
     
-    def fix_prunning(self, W, b, B, prn_perc, mode="keep"):
+    def Relevance_based_pruning(self, W, b, B, prn_perc, mode="keep"):
         """
         Parameters
         ----------
@@ -174,19 +229,22 @@ class RBP:
           
         # Calculate the nodes ranking
         B_abs = self.np.abs(B)        
+        
         idx = self.np.argsort(B_abs,axis=0)
         
         if mode == "keep":
-            idx_prun  = idx[0:n]
+            idx_prun  = idx[len(idx)-n::]
             
         if mode == "prune":
             idx_prun  = idx[0:-n]
             
         # Prune the network
         B_pruned = B[idx_prun]
+        
         W_pruned = W[:,idx_prun]
+        
         b_pruned = b[0,idx_prun]
         
-        return W_pruned,b_pruned,B_pruned
+        return W_pruned, b_pruned, B_pruned
     
 
