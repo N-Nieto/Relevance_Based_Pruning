@@ -22,13 +22,14 @@ class RBP:
     
     import numpy as np
     import scipy.linalg as sc_lin
-    import torch 
+# =============================================================================
+#     import torch 
+# =============================================================================
     
     def __init__(self):
         from scipy.stats import kurtosis
         
         self.kurtosis = kurtosis
-        
         return
     
     def generate_rand_network(self, x, N_nodes, distr="uniform" , random_state = None):
@@ -114,10 +115,17 @@ class RBP:
         z = (1 - self.np.exp(-H))/(1 + self.np.exp(-H));
         return z
     
-    def fit(self, x, W, b, y, Reg = 0, device = "cpu"):
+    def fit(self, y, x=[], W = [], b = [], H = [],  Reg = 0, device = "cpu"):
         
-        H = self.generate_H(x, W, b)
-          
+        
+        if  len(H) == 0:
+            # If not H was precomputed, check that W and b are not empty
+            if len(W) == 0 and len(b) == 0:
+                H = self.generate_H(x, W, b)
+                
+            else:
+                Warning("W and b need to be given if H is not precomputed")
+            
         if device == "cpu" or device =="CPU":
             if Reg == 0:
                 # Train traditional ELM
@@ -134,8 +142,7 @@ class RBP:
                 p2 = self.np.dot(H_t, y)
                 
                 B = self.np.dot(p1, p2)
-
-        # GPU implementation of pseudoinverse 
+                
         if device == "cuda" or device == "CUDA":
             
             if Reg == 0:
@@ -149,6 +156,7 @@ class RBP:
                 B  = self.np.dot(Ht, y)  
             else:
                 # Train Regularized ELM
+                
                 I = self.np.identity(H.shape[1]);
                 
                 H_t = H.T
@@ -168,10 +176,17 @@ class RBP:
         return B
     
     
-    def predict(self, x, W, b, B):
-        # Generate H
-        H = self.generate_H(x,W,b)
+    def predict(self, B, x=[], W = [], b = [],  H = []):
         
+        
+        if  not len(H) == 0:
+            # If not H was precomputed, check that W and b are not empty
+            if not len(W) == 0 and not len(b) == 0:
+                H = self.generate_H(x, W, b)
+                
+            else:
+                Warning("W and b need to be given if H is not precomputed")
+
         # Make a prediction
         y = self.np.dot(H,B)
         
@@ -180,7 +195,7 @@ class RBP:
         
         return y
     
-    def Relevance_based_pruning(self, W, b, B, prn_perc, mode="keep"):
+    def Relevance_based_pruning(self, B , prn_perc, W = [], b = [], H = [], H_test = [],  mode="keep"):
         """
         Parameters
         ----------
@@ -210,16 +225,17 @@ class RBP:
         """
         
         # For Fix nodes
-        if type(prn_perc)==int:
+        if type(prn_perc) == int:
             n = prn_perc
         
         # For Fix percent
-        if type(prn_perc)==float:
+        if type(prn_perc) == float:
+            
             if prn_perc<1:
-                n=int ( self.np.floor(prn_perc * self.np.size(B)))
+                n = int ( self.np.floor(prn_perc * self.np.size(B)))
                 # Leave at least 1 neuron
-                if n==0:
-                    n=1
+                if n == 0:
+                    n = 1
             else:
                 Warning('Wrong pruning percent')
         
@@ -228,6 +244,7 @@ class RBP:
             n = B.shape[0]
           
         # Calculate the nodes ranking
+ 
         B_abs = self.np.abs(B)        
         
         idx = self.np.argsort(B_abs,axis=0)
@@ -238,13 +255,25 @@ class RBP:
         if mode == "prune":
             idx_prun  = idx[0:-n]
             
+            
         # Prune the network
         B_pruned = B[idx_prun]
+
+        if not len(H) == 0:
+            
+            H_prun = H[:,idx_prun]
+            H_test_pruned = H_test[:,idx_prun]
+            
+            return B_pruned , H_prun , H_test_pruned
         
-        W_pruned = W[:,idx_prun]
-        
-        b_pruned = b[0,idx_prun]
-        
-        return W_pruned, b_pruned, B_pruned
-    
+            # If not H was precomputed, check that W and b are not empty
+            if not len(W) == 0 and not len(b) == 0:
+                
+                W_pruned = W[:,idx_prun]
+                b_pruned = b[0,idx_prun]
+                
+                return B_pruned, W_pruned, b_pruned
+            
+            else:
+                Warning("W and b need to be given if H is not precomputed")
 
