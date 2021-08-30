@@ -223,7 +223,7 @@ class RBP:
         """
         
         # For Fix nodes
-        if type(prn_perc) == int:
+        if type(prn_perc) == int or type(prn_perc) == self.np.int64:
             n = prn_perc
         
         # For Fix percent
