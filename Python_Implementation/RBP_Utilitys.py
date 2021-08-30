@@ -22,9 +22,7 @@ class RBP:
     
     import numpy as np
     import scipy.linalg as sc_lin
-# =============================================================================
-#     import torch 
-# =============================================================================
+    import torch 
     
     def __init__(self):
         from scipy.stats import kurtosis
