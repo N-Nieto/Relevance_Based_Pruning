@@ -19,3 +19,17 @@ We offer an implementation of the traditional ELM and the proposed RBP method in
 We also offer a python implementation of the traditional ELM and the proposed RBP method.
 
 We develop a Colaboratory demo tutorial, that explains step by step of all the implemented functions.
+
+
+## Citing this work
+
+Please cite this work.
+```bibtex
+@article{nieto2019extreme,
+  title={Extreme Learning Machine design for dealing with unrepresentative features},
+  author={Nieto, Nicol{\'a}s and Ibarrola, Francisco and Peterson, Victoria and Rufiner, Hugo and Spies, Ruben},
+  journal={arXiv preprint arXiv:1912.02154},
+  year={2019}
+}
+
+```
