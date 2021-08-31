@@ -127,7 +127,7 @@ class RBP:
         if device == "cpu" or device =="CPU":
             if Reg == 0:
                 # Train traditional ELM
-                Ht = self.sc_lin.pinv2(H)
+                Ht = self.sc_lin.pinv(H)
                 B  = self.np.dot(Ht, y)
             else:
                 # Train Regularized ELM
