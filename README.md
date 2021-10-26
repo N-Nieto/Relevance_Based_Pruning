@@ -1,5 +1,5 @@
 #  RELEVANCE-BASED PRUNING
-This is the repository with the implementation of the proposed method: Relevance-Based Pruning proposed in https://arxiv.org/abs/1912.02154
+This is the repository with the implementation of the proposed method: Relevance-Based Pruning proposed in Nieto et al. See full paper here https://rdcu.be/cyFP3
 
 Extreme learning machines (ELMs) suffer from the presence of unrepresentative features. This means that the number of hidden nodes must increase for the algorithm to achieve good classification results.
 
@@ -25,11 +25,14 @@ We develop a Colaboratory demo tutorial, that explains step by step of all the i
 
 Please cite this work.
 ```bibtex
-@article{nieto2019extreme,
+@article{nieto2021extreme,
   title={Extreme Learning Machine design for dealing with unrepresentative features},
-  author={Nieto, Nicol{\'a}s and Ibarrola, Francisco and Peterson, Victoria and Rufiner, Hugo and Spies, Ruben},
-  journal={arXiv preprint arXiv:1912.02154},
-  year={2019}
+  author={Nieto, Nicol{\'a}s and Ibarrola, Francisco J and Peterson, Victoria and Rufiner, Hugo L and Spies, Ruben},
+  journal={Neuroinformatics},
+  pages={1--10},
+  year={2021},
+  publisher={Springer}
 }
+
 
 ```
